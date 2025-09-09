@@ -1,0 +1,53 @@
+{
+  "Colombo": [
+    { "name": "University of Colombo", "type": "GOVERNMENT" },
+    { "name": "University of Moratuwa", "type": "GOVERNMENT" },
+    { "name": "University of the Visual & Performing Arts", "type": "GOVERNMENT" },
+    { "name": "The Open University of Sri Lanka", "type": "GOVERNMENT" },
+    { "name": "General Sir John Kotelawala Defence University", "type": "OTHER_GOVERNMENT" },
+    { "name": "University of Vocational Technology", "type": "OTHER_GOVERNMENT" },
+    { "name": "Ocean University of Sri Lanka", "type": "OTHER_GOVERNMENT" },
+    { "name": "Sri Lanka Institute of Information Technology (SLIIT)", "type": "NON_STATE" },
+    { "name": "NSBM Green University", "type": "NON_STATE" },
+    { "name": "SLTC Research University", "type": "NON_STATE" },
+    { "name": "CINEC University", "type": "NON_STATE" },
+    { "name": "Horizon Campus", "type": "NON_STATE" },
+    { "name": "APIIT University", "type": "NON_STATE" },
+    { "name": "ICBT University", "type": "NON_STATE" },
+    { "name": "BCI Campus", "type": "NON_STATE" }
+  ],
+  "Gampaha": [
+    { "name": "University of Kelaniya", "type": "GOVERNMENT" },
+    { "name": "Gampaha Wickramarachchi University of Indigenous Medicine", "type": "GOVERNMENT" }
+  ],
+  "Kandy": [
+    { "name": "University of Peradeniya", "type": "GOVERNMENT" }
+  ],
+  "Matara": [
+    { "name": "University of Ruhuna", "type": "GOVERNMENT" }
+  ],
+  "Jaffna": [
+    { "name": "University of Jaffna", "type": "GOVERNMENT" }
+  ],
+  "Vavuniya": [
+    { "name": "University of Vavuniya, Sri Lanka", "type": "GOVERNMENT" }
+  ],
+  "Anuradhapura": [
+    { "name": "Rajarata University of Sri Lanka", "type": "GOVERNMENT" }
+  ],
+  "Batticaloa": [
+    { "name": "Eastern University, Sri Lanka", "type": "GOVERNMENT" }
+  ],
+  "Ampara": [
+    { "name": "South Eastern University of Sri Lanka", "type": "GOVERNMENT" }
+  ],
+  "Ratnapura": [
+    { "name": "Sabaragamuwa University of Sri Lanka", "type": "GOVERNMENT" }
+  ],
+  "Kurunegala": [
+    { "name": "Wayamba University of Sri Lanka", "type": "GOVERNMENT" }
+  ],
+  "Badulla": [
+    { "name": "Uva Wellassa University", "type": "GOVERNMENT" }
+  ]
+}

@@ -1,0 +1,47 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+
+model Province {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  districts District[]
+}
+
+model District {
+  id         Int       @id @default(autoincrement())
+  name       String
+  province   Province  @relation(fields: [provinceId], references: [id])
+  provinceId Int
+  organizations Organization[]
+  @@unique([provinceId, name])
+}
+
+enum OrgType {
+  School
+  University
+  Company
+  Government
+  NGO
+  Club
+  Other
+}
+
+model Organization {
+  id         Int      @id @default(autoincrement())
+  type       OrgType
+  name       String
+  provinceId Int?
+  districtId Int?
+  province   Province? @relation(fields: [provinceId], references: [id])
+  district   District? @relation(fields: [districtId], references: [id])
+  @@index([type, provinceId, districtId, name])
+}
+
+model Registration {
+  id           Int      @id @default(autoincrement())
+  type         OrgType
+  province     String?
+  district     String?
+  organization String
+  createdAt    DateTime @default(now())
+}
