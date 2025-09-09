@@ -1,5 +1,11 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env(psql 'postgresql://neondb_owner:npg_Bxw5jUHt7WaE@ep-quiet-dream-a1674g17-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require')
+}
 
 model Province {
   id        Int        @id @default(autoincrement())
@@ -8,40 +14,44 @@ model Province {
 }
 
 model District {
-  id         Int       @id @default(autoincrement())
-  name       String
-  province   Province  @relation(fields: [provinceId], references: [id])
-  provinceId Int
-  organizations Organization[]
-  @@unique([provinceId, name])
-}
-
-enum OrgType {
-  School
-  University
-  Company
-  Government
-  NGO
-  Club
-  Other
-}
-
-model Organization {
   id         Int      @id @default(autoincrement())
-  type       OrgType
   name       String
-  provinceId Int?
-  districtId Int?
-  province   Province? @relation(fields: [provinceId], references: [id])
-  district   District? @relation(fields: [districtId], references: [id])
-  @@index([type, provinceId, districtId, name])
+  province   Province @relation(fields: [provinceId], references: [id])
+  provinceId Int
+  schools    School[]
+}
+
+model School {
+  id        Int      @id @default(autoincrement())
+  name      String
+  district  District @relation(fields: [districtId], references: [id])
+  districtId Int
+}
+
+model University {
+  id          Int           @id @default(autoincrement())
+  name        String        @unique
+  departments Department[]
+}
+
+model Department {
+  id           Int        @id @default(autoincrement())
+  name         String
+  university   University @relation(fields: [universityId], references: [id])
+  universityId Int
 }
 
 model Registration {
-  id           Int      @id @default(autoincrement())
-  type         OrgType
-  province     String?
-  district     String?
-  organization String
-  createdAt    DateTime @default(now())
+  id          Int       @id @default(autoincrement())
+  type        String
+  province    String?
+  district    String?
+  school      String?
+  university  String?
+  department  String?
+  age_range   String?
+  sex         String?
+  group_size  Int?      @default(1)
+  group_meta  Json?
+  createdAt   DateTime  @default(now())
 }

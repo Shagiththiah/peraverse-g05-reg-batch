@@ -1,18 +1,15 @@
 import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import RegistrationForm from "./components/RegistrationForm.jsx";
+import AdminPortal from "./components/AdminPortal.jsx";
 
 export default function App() {
   return (
-    <div
-      style={{
-        maxWidth: 900,
-        margin: "32px auto",
-        padding: "0 16px",
-        fontFamily:
-          '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif'
-      }}
-    >
-      <RegistrationForm />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<RegistrationForm />} />
+        <Route path="/admin" element={<AdminPortal />} />
+      </Routes>
+    </Router>
   );
 }
