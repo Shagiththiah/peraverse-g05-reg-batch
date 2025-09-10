@@ -1,25 +1,5 @@
-# Dependencies
 node_modules/
-
-# Logs
+.env
 *.log
-
-# Coverage reports
 coverage/
-
-# Prisma generated client (will be regenerated)
 .prisma/
-
-# Environment files (shared database server)
-# .env - ALLOWED for shared database
-.env.local
-.env.production
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# OS files
-.DS_Store
-Thumbs.db

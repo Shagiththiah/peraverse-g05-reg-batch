@@ -1,203 +1,158 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
 import SelectField from "./SelectField";
 import api from "../lib/api";
-import "../form.css";
 
-const TYPE_OPTIONS = [
-  { value: "school", label: "School" },
-  { value: "university", label: "University" },
-  { value: "general", label: "General People" },
+const TYPE_BUTTONS = [
+  { label: "School", canonical: "SCHOOL" },
+  { label: "University", canonical: "UNIVERSITY" },
+  { label: "Family", canonical: "FAMILY" },
+  { label: "General", canonical: "GENERAL" },
 ];
 
+const AGE_RANGES = ["CHILD", "TEENAGER", "ADULT", "SENIOR"];
+const SEX = ["MALE", "FEMALE", "OTHER"];
+
 export default function RegistrationForm() {
-  const navigate = useNavigate();
-  const [type, setType] = useState("");
+  const [selectedTypeLabel, setSelectedTypeLabel] = useState("");
+  const canonicalType =
+    TYPE_BUTTONS.find((b) => b.label === selectedTypeLabel)?.canonical || "";
+
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [schools, setSchools] = useState([]);
   const [universities, setUniversities] = useState([]);
   const [departments, setDepartments] = useState([]);
 
-  // selected values
-  const [selectedProvince, setSelectedProvince] = useState("");
-  const [selectedDistrict, setSelectedDistrict] = useState("");
-  const [selectedSchool, setSelectedSchool] = useState("");
-  const [selectedUniversity, setSelectedUniversity] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [province, setProvince] = useState("");
+  const [district, setDistrict] = useState("");
+  const [schoolName, setSchoolName] = useState("");
+  const [university, setUniversity] = useState("");
+  const [department, setDepartment] = useState("");
   const [ageRange, setAgeRange] = useState("");
   const [sex, setSex] = useState("");
+  const [groupSize, setGroupSize] = useState(1);
 
-  // Load provinces & universities
-  useEffect(() => {
-    api.provinces().then(setProvinces);
-    api.universities().then(setUniversities);
-  }, []);
+  const [done, setDone] = useState(null);
+  const [error, setError] = useState("");
 
-  // Load districts on province select
   useEffect(() => {
-    if (selectedProvince) {
-      api.districts(selectedProvince).then(setDistricts);
-    } else {
-      setDistricts([]);
+    if (canonicalType === "SCHOOL") {
+      api.provinces().then(setProvinces).catch(() => setProvinces([]));
+    } else if (canonicalType === "UNIVERSITY") {
+      api.universities().then(setUniversities).catch(() => setUniversities([]));
     }
-  }, [selectedProvince]);
+  }, [canonicalType]);
 
-  // Load schools on province + district
   useEffect(() => {
-    if (selectedProvince && selectedDistrict) {
-      api.schools(selectedProvince, selectedDistrict).then(setSchools);
-    } else {
-      setSchools([]);
+    if (canonicalType === "SCHOOL" && province) {
+      api.districts(province).then(setDistricts).catch(() => setDistricts([]));
     }
-  }, [selectedProvince, selectedDistrict]);
+  }, [province, canonicalType]);
 
-  // Load departments on university select
   useEffect(() => {
-    if (selectedUniversity) {
-      api.departments(selectedUniversity).then(setDepartments);
-    } else {
-      setDepartments([]);
+    if (canonicalType === "SCHOOL" && province && district) {
+      api.schools(province, district).then(setSchools).catch(() => setSchools([]));
     }
-  }, [selectedUniversity]);
+  }, [province, district, canonicalType]);
 
-  const handleSubmit = async (e) => {
+  useEffect(() => {
+    if (canonicalType === "UNIVERSITY" && university) {
+      api.departments(university).then(setDepartments).catch(() => setDepartments([]));
+    }
+  }, [university, canonicalType]);
+
+  const canSubmit = useMemo(() => {
+    if (canonicalType === "SCHOOL") return province && district && schoolName && groupSize > 0;
+    if (canonicalType === "UNIVERSITY") return university && department && groupSize > 0;
+    if (canonicalType === "GENERAL") return ageRange && sex && groupSize > 0;
+    if (canonicalType === "FAMILY") return groupSize > 0;
+    return false;
+  }, [canonicalType, province, district, schoolName, university, department, ageRange, sex, groupSize]);
+
+  const onSubmit = async (e) => {
     e.preventDefault();
-
-    // Validation
-    if (!type) {
-      alert("Please select a registration type");
-      return;
-    }
-
-    let payload = { type };
-
-    if (type === "school") {
-      if (!selectedProvince || !selectedDistrict || !selectedSchool) {
-        alert("Please fill in all required fields for school registration");
-        return;
-      }
-      payload = {
-        ...payload,
-        province: selectedProvince,
-        district: selectedDistrict,
-        school: selectedSchool,
-      };
-    } else if (type === "university") {
-      if (!selectedUniversity || !selectedDepartment) {
-        alert("Please fill in all required fields for university registration");
-        return;
-      }
-      payload = {
-        ...payload,
-        university: selectedUniversity,
-        department: selectedDepartment,
-      };
-    } else if (type === "general") {
-      if (!ageRange || !sex) {
-        alert("Please fill in all required fields for general registration");
-        return;
-      }
-      payload = { ...payload, ageRange, sex };
-    }
-
     try {
-      console.log("Submitting registration:", payload);
-      await api.register(payload);
-      alert("Registration successful!");
-      navigate("/");
-    } catch (error) {
-      console.error("Registration error:", error);
-      alert("Registration failed: " + (error.message || "Unknown error"));
+      let payload = { type: canonicalType, group_size: groupSize };
+      if (canonicalType === "SCHOOL") payload = { ...payload, province, district, schoolName };
+      if (canonicalType === "UNIVERSITY") payload = { ...payload, university, department };
+      if (canonicalType === "GENERAL") payload = { ...payload, ageRange, sex };
+      if (canonicalType === "FAMILY") payload = { ...payload };
+
+      const res = await api.register(payload);
+      setDone(res);
+      setError("");
+    } catch (err) {
+      setError("Registration failed");
     }
   };
 
   return (
-    <div className="form-container">
-      <h2>Individual Registration</h2>
-      <button type="button" className="back-btn" onClick={() => navigate("/")}>Back</button>
+    <form onSubmit={onSubmit}>
+      <h2>Register Visitor</h2>
 
-      <form onSubmit={handleSubmit}>
-        <SelectField
-          label="Select Type"
-          options={TYPE_OPTIONS}
-          value={type}
-          onChange={setType}
-        />
+      {/* Type selection */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+        {TYPE_BUTTONS.map((btn) => (
+          <button
+            key={btn.label}
+            type="button"
+            onClick={() => setSelectedTypeLabel(btn.label)}
+            style={{
+              padding: "6px 12px",
+              borderRadius: 6,
+              border: selectedTypeLabel === btn.label ? "2px solid blue" : "1px solid gray",
+            }}
+          >
+            {btn.label}
+          </button>
+        ))}
+      </div>
 
-        {type === "school" && (
-          <>
-            <SelectField
-              label="Province"
-              options={provinces.map((p) => ({ value: p, label: p }))}
-              value={selectedProvince}
-              onChange={setSelectedProvince}
-            />
-            <SelectField
-              label="District"
-              options={districts.map((d) => ({ value: d, label: d }))}
-              value={selectedDistrict}
-              onChange={setSelectedDistrict}
-              disabled={!selectedProvince}
-            />
-            <SelectField
-              label="School"
-              options={schools.map((s) => ({ value: s, label: s }))}
-              value={selectedSchool}
-              onChange={setSelectedSchool}
-              disabled={!selectedDistrict}
-            />
-          </>
-        )}
+      {/* SCHOOL */}
+      {canonicalType === "SCHOOL" && (
+        <>
+          <SelectField id="province" label="Province" value={province} onChange={setProvince} options={provinces} placeholder="Select province" />
+          <SelectField id="district" label="District" value={district} onChange={setDistrict} options={districts} placeholder="Select district" disabled={!province} />
+          <SelectField id="school" label="School" value={schoolName} onChange={setSchoolName} options={schools} placeholder="Select school" disabled={!district} />
+        </>
+      )}
 
-        {type === "university" && (
-          <>
-            <SelectField
-              label="University"
-              options={universities.map((u) => ({ value: u, label: u }))}
-              value={selectedUniversity}
-              onChange={setSelectedUniversity}
-            />
-            <SelectField
-              label="Department"
-              options={departments.map((d) => ({ value: d, label: d }))}
-              value={selectedDepartment}
-              onChange={setSelectedDepartment}
-              disabled={!selectedUniversity}
-            />
-          </>
-        )}
+      {/* UNIVERSITY */}
+      {canonicalType === "UNIVERSITY" && (
+        <>
+          <SelectField id="university" label="University" value={university} onChange={setUniversity} options={universities} placeholder="Select university" />
+          <SelectField id="department" label="Department" value={department} onChange={setDepartment} options={departments} placeholder="Select department" disabled={!university} />
+        </>
+      )}
 
-        {type === "general" && (
-          <>
-            <SelectField
-              label="Age Range"
-              options={[
-                { value: "under18", label: "Under 18" },
-                { value: "18-25", label: "18-25" },
-                { value: "26-40", label: "26-40" },
-                { value: "40+", label: "40+" },
-              ]}
-              value={ageRange}
-              onChange={setAgeRange}
-            />
-            <SelectField
-              label="Sex"
-              options={[
-                { value: "male", label: "Male" },
-                { value: "female", label: "Female" },
-                { value: "other", label: "Other" },
-              ]}
-              value={sex}
-              onChange={setSex}
-            />
-          </>
-        )}
+      {/* GENERAL */}
+      {canonicalType === "GENERAL" && (
+        <>
+          <SelectField id="ageRange" label="Age range" value={ageRange} onChange={setAgeRange} options={AGE_RANGES} placeholder="Select age range" />
+          <SelectField id="sex" label="Sex" value={sex} onChange={setSex} options={SEX} placeholder="Select sex" />
+        </>
+      )}
 
-        <button type="submit" className="submit-btn">
-          Register
-        </button>
-      </form>
-    </div>
+      {/* FAMILY */}
+      {canonicalType === "FAMILY" && (
+        <>
+          <label>Family Group</label>
+          <p>Register family members together</p>
+        </>
+      )}
+
+      {/* Group Size */}
+      {canonicalType && (
+        <div>
+          <label>Group Size</label>
+          <input type="number" min="1" value={groupSize} onChange={(e) => setGroupSize(Number(e.target.value))} />
+        </div>
+      )}
+
+      <button type="submit" disabled={!canSubmit}>Submit</button>
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {done && <p style={{ color: "green" }}>✅ Registered!</p>}
+    </form>
   );
 }

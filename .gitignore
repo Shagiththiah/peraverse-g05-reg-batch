@@ -1,34 +1,12 @@
-# Dependencies
+# Root
+.env
+*.env
 node_modules/
+dist/
+*.log
+.DS_Store
+node_modules/
+.env
 Frontend/node_modules/
 Backend/node_modules/
-
-# Build outputs
-dist/
 Frontend/dist/
-
-# Logs
-*.log
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Environment files (shared database server)
-# .env - ALLOWED for shared database
-.env.local
-.env.production
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Prisma
-Backend/.prisma/
