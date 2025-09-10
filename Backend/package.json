@@ -1,11 +1,16 @@
 {
   "name": "registration-backend",
   "version": "1.0.0",
+  "type": "module",
   "main": "server/index.js",
   "scripts": {
     "dev": "nodemon server/index.js",
     "start": "node server/index.js",
-    "prisma": "prisma"
+    "prisma": "prisma",
+    "seed": "node prisma/seed.js"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "express": "^4.18.2",
