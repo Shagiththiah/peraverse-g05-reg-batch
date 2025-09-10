@@ -1,45 +1,46 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../lib/api";
 
 export default function AdminPortal() {
-  const [rows, setRows] = useState([]);
+  const [visitors, setVisitors] = useState([]);
 
   useEffect(() => {
-    axios
-      .get("/api/admin/registrations", {
-        headers: { Authorization: "Bearer supersecret123" },
-      })
-      .then((res) => setRows(res.data))
-      .catch((err) => console.error(err));
+    api.getVisitors().then(setVisitors).catch(console.error);
   }, []);
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Admin Portal</h1>
-      <table border="1" cellPadding="8">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Type</th>
-            <th>Leader</th>
-            <th>Group Size</th>
-            <th>Group Meta</th>
-            <th>Registered At</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.id}>
-              <td>{r.id}</td>
-              <td>{r.type}</td>
-              <td>{r.school || r.university || r.age_range || "-"}</td>
-              <td>{r.group_size}</td>
-              <td>{JSON.stringify(r.group_meta)}</td>
-              <td>{new Date(r.created_at).toLocaleString()}</td>
+    <div>
+      <h2>Admin Portal</h2>
+      {visitors.length === 0 ? (
+        <p>No visitors registered yet.</p>
+      ) : (
+        <table border="1" cellPadding="6" style={{ marginTop: 10 }}>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Province</th>
+              <th>District</th>
+              <th>School</th>
+              <th>University</th>
+              <th>Department</th>
+              <th>Group Size</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {visitors.map((v) => (
+              <tr key={v.id}>
+                <td>{v.type}</td>
+                <td>{v.province || "-"}</td>
+                <td>{v.district || "-"}</td>
+                <td>{v.schoolName || "-"}</td>
+                <td>{v.university || "-"}</td>
+                <td>{v.department || "-"}</td>
+                <td>{v.group_size || 1}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { prisma } from "../services/prisma.js";
+import prisma from "../services/prisma.js";
 
 // ---------------- PROVINCES ----------------
 export const getProvinces = async (_req, res) => {

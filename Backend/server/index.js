@@ -1,38 +1,28 @@
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import registrationRoutes from '../src/routes/registrationRoutes.js';
+// Backend/server/index.js
+import express from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+import registrationRoutes from "../src/routes/registrationRoutes.js";
+import adminRoutes from "../src/routes/adminRoutes.js";
 
 const app = express();
+
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
-// APIs
-app.use('/api', registrationRoutes);
+// Register visitor APIs
+app.use("/api", registrationRoutes);
 
-// Health check
-app.get('/health', (_req, res) => res.json({ ok: true }));
+// Admin APIs
+app.use("/admin", adminRoutes);
 
-// ---- Serve React build (optional, controlled by env) ----
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-if (process.env.SERVE_FRONTEND === 'true') {
-  const distPath = path.resolve(__dirname, '../../Frontend/dist');
-  app.use(express.static(distPath));
-  // send index.html for all non-API routes
-  app.get('*', (req, res) => {
-    if (req.path.startsWith('/api')) return res.status(404).send('Not Found');
-    res.sendFile(path.join(distPath, 'index.html'));
-  });
-} else {
-  // friendlier root page in dev
-  app.get('/', (_req, res) =>
-    res.send('RFID Registration API is running. Try <a href="/api/provinces">/api/provinces</a>')
-  );
-}
+// Default
+app.get("/", (req, res) => {
+  res.send("Backend is running 🚀");
+});
 
-const port = +(process.env.PORT || 4000);
-const host = process.env.HOST || '127.0.0.1';
-app.listen(port, host, () => console.log(`Backend running on http://${host}:${port}`));
+// Start server
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://127.0.0.1:${PORT}`);
+});

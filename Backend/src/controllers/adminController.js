@@ -1,14 +1,17 @@
-import { prisma } from "../services/prisma.js";
+// Backend/src/controllers/adminController.js
+import prisma from "../services/prisma.js";
 
-// Fetch all registrations for admin
-export const getAllRegistrations = async (req, res) => {
+/**
+ * Fetch all registered visitors (for Admin dashboard)
+ */
+export const getVisitors = async (req, res) => {
   try {
-    const regs = await prisma.visitors.findMany({
-      orderBy: { created_at: "desc" }
+    const visitors = await prisma.visitor.findMany({
+      orderBy: { createdAt: "desc" },
     });
-    res.json(regs);
-  } catch (err) {
-    console.error("Admin fetch error:", err);
-    res.status(500).json({ error: "Failed to fetch registrations" });
+    res.json(visitors);
+  } catch (error) {
+    console.error("Error fetching visitors:", error);
+    res.status(500).json({ error: "Failed to fetch visitors" });
   }
 };

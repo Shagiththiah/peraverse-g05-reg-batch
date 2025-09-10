@@ -1,22 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
-import SelectField from "./SelectField.jsx";
-import { api } from "../lib/api.js";
+import SelectField from "./SelectField";
+import api from "../lib/api";
 
 const TYPE_BUTTONS = [
   { label: "School", canonical: "SCHOOL" },
   { label: "University", canonical: "UNIVERSITY" },
   { label: "Family", canonical: "FAMILY" },
   { label: "General", canonical: "GENERAL" },
-  { label: "Company", canonical: "GENERAL" },
-  { label: "Government", canonical: "GENERAL" },
-  { label: "NGO", canonical: "GENERAL" },
-  { label: "Club", canonical: "GENERAL" },
-  { label: "Other", canonical: "GENERAL" }
 ];
 
 const AGE_RANGES = ["CHILD", "TEENAGER", "ADULT", "SENIOR"];
-const SEX = ["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"];
-const FAMILY_TYPES = ["NUCLEAR", "EXTENDED", "SINGLE_PARENT", "OTHER"];
+const SEX = ["MALE", "FEMALE", "OTHER"];
 
 export default function RegistrationForm() {
   const [selectedTypeLabel, setSelectedTypeLabel] = useState("");
@@ -36,107 +30,77 @@ export default function RegistrationForm() {
   const [department, setDepartment] = useState("");
   const [ageRange, setAgeRange] = useState("");
   const [sex, setSex] = useState("");
-  const [familyType, setFamilyType] = useState("");
   const [groupSize, setGroupSize] = useState(1);
 
-  const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setProvince("");
-    setDistrict("");
-    setSchoolName("");
-    setUniversity("");
-    setDepartment("");
-    setAgeRange("");
-    setSex("");
-    setFamilyType("");
-    setGroupSize(1);
-    setError("");
-    setDone(null);
-
     if (canonicalType === "SCHOOL") {
-      api.provinces()
-        .then((list) => setProvinces(Array.isArray(list) ? list : []))
-        .catch(() => setProvinces([]));
+      api.provinces().then(setProvinces).catch(() => setProvinces([]));
     } else if (canonicalType === "UNIVERSITY") {
-      api.universities()
-        .then((list) => setUniversities(Array.isArray(list) ? list : []))
-        .catch(() => setUniversities([]));
-    } else {
-      setProvinces([]);
-      setUniversities([]);
+      api.universities().then(setUniversities).catch(() => setUniversities([]));
     }
   }, [canonicalType]);
 
+  useEffect(() => {
+    if (canonicalType === "SCHOOL" && province) {
+      api.districts(province).then(setDistricts).catch(() => setDistricts([]));
+    }
+  }, [province, canonicalType]);
+
+  useEffect(() => {
+    if (canonicalType === "SCHOOL" && province && district) {
+      api.schools(province, district).then(setSchools).catch(() => setSchools([]));
+    }
+  }, [province, district, canonicalType]);
+
+  useEffect(() => {
+    if (canonicalType === "UNIVERSITY" && university) {
+      api.departments(university).then(setDepartments).catch(() => setDepartments([]));
+    }
+  }, [university, canonicalType]);
+
   const canSubmit = useMemo(() => {
-    if (submitting) return false;
-    if (canonicalType === "SCHOOL")
-      return !!(province && district && schoolName && groupSize > 0);
-    if (canonicalType === "UNIVERSITY")
-      return !!(university && department && groupSize > 0);
-    if (canonicalType === "FAMILY")
-      return !!(familyType && groupSize > 0);
-    if (canonicalType === "GENERAL")
-      return !!(ageRange && sex && groupSize > 0);
+    if (canonicalType === "SCHOOL") return province && district && schoolName && groupSize > 0;
+    if (canonicalType === "UNIVERSITY") return university && department && groupSize > 0;
+    if (canonicalType === "GENERAL") return ageRange && sex && groupSize > 0;
+    if (canonicalType === "FAMILY") return groupSize > 0;
     return false;
-  }, [
-    canonicalType,
-    province,
-    district,
-    schoolName,
-    university,
-    department,
-    ageRange,
-    sex,
-    familyType,
-    groupSize,
-    submitting
-  ]);
+  }, [canonicalType, province, district, schoolName, university, department, ageRange, sex, groupSize]);
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (!canSubmit) return;
-    setSubmitting(true);
-    setError("");
-
     try {
       let payload = { type: canonicalType, group_size: groupSize };
-      if (canonicalType === "SCHOOL")
-        payload = { ...payload, province, district, schoolName };
-      if (canonicalType === "UNIVERSITY")
-        payload = { ...payload, university, department };
-      if (canonicalType === "FAMILY")
-        payload = { ...payload, group_meta: { familyType } };
-      if (canonicalType === "GENERAL")
-        payload = { ...payload, ageRange, sex };
+      if (canonicalType === "SCHOOL") payload = { ...payload, province, district, schoolName };
+      if (canonicalType === "UNIVERSITY") payload = { ...payload, university, department };
+      if (canonicalType === "GENERAL") payload = { ...payload, ageRange, sex };
+      if (canonicalType === "FAMILY") payload = { ...payload };
 
       const res = await api.register(payload);
-      setDone(res.summary);
+      setDone(res);
+      setError("");
     } catch (err) {
-      setError(err?.response?.data?.error || "failed to register");
-    } finally {
-      setSubmitting(false);
+      setError("Registration failed");
     }
   };
 
   return (
-    <form onSubmit={onSubmit} style={{ marginTop: 16 }}>
-      <h1>Register Visitor</h1>
+    <form onSubmit={onSubmit}>
+      <h2>Register Visitor</h2>
 
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
+      {/* Type selection */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
         {TYPE_BUTTONS.map((btn) => (
           <button
             key={btn.label}
             type="button"
             onClick={() => setSelectedTypeLabel(btn.label)}
             style={{
-              padding: "8px 14px",
-              borderRadius: 10,
-              border: selectedTypeLabel === btn.label ? "2px solid #1e88e5" : "1px solid #ccc",
-              background: selectedTypeLabel === btn.label ? "#e8f2fd" : "#fff",
-              cursor: "pointer",
+              padding: "6px 12px",
+              borderRadius: 6,
+              border: selectedTypeLabel === btn.label ? "2px solid blue" : "1px solid gray",
             }}
           >
             {btn.label}
@@ -144,46 +108,51 @@ export default function RegistrationForm() {
         ))}
       </div>
 
+      {/* SCHOOL */}
       {canonicalType === "SCHOOL" && (
         <>
-          <SelectField id="province" label="Province" value={province} onChange={setProvince} options={provinces} />
-          <SelectField id="district" label="District" value={district} onChange={setDistrict} options={districts} />
-          <SelectField id="school" label="School" value={schoolName} onChange={setSchoolName} options={schools} />
-          <label>Group Size:</label>
-          <input type="number" value={groupSize} onChange={(e) => setGroupSize(Number(e.target.value))} min="1" />
+          <SelectField id="province" label="Province" value={province} onChange={setProvince} options={provinces} placeholder="Select province" />
+          <SelectField id="district" label="District" value={district} onChange={setDistrict} options={districts} placeholder="Select district" disabled={!province} />
+          <SelectField id="school" label="School" value={schoolName} onChange={setSchoolName} options={schools} placeholder="Select school" disabled={!district} />
         </>
       )}
 
+      {/* UNIVERSITY */}
       {canonicalType === "UNIVERSITY" && (
         <>
-          <SelectField id="university" label="University" value={university} onChange={setUniversity} options={universities} />
-          <SelectField id="department" label="Department" value={department} onChange={setDepartment} options={departments} />
-          <label>Group Size:</label>
-          <input type="number" value={groupSize} onChange={(e) => setGroupSize(Number(e.target.value))} min="1" />
+          <SelectField id="university" label="University" value={university} onChange={setUniversity} options={universities} placeholder="Select university" />
+          <SelectField id="department" label="Department" value={department} onChange={setDepartment} options={departments} placeholder="Select department" disabled={!university} />
         </>
       )}
 
-      {canonicalType === "FAMILY" && (
-        <>
-          <SelectField id="familyType" label="Family Type" value={familyType} onChange={setFamilyType} options={FAMILY_TYPES} />
-          <label>Family Size:</label>
-          <input type="number" value={groupSize} onChange={(e) => setGroupSize(Number(e.target.value))} min="1" />
-        </>
-      )}
-
+      {/* GENERAL */}
       {canonicalType === "GENERAL" && (
         <>
-          <SelectField id="ageRange" label="Age Range" value={ageRange} onChange={setAgeRange} options={AGE_RANGES} />
-          <SelectField id="sex" label="Sex" value={sex} onChange={setSex} options={SEX} />
-          <label>Group Size:</label>
-          <input type="number" value={groupSize} onChange={(e) => setGroupSize(Number(e.target.value))} min="1" />
+          <SelectField id="ageRange" label="Age range" value={ageRange} onChange={setAgeRange} options={AGE_RANGES} placeholder="Select age range" />
+          <SelectField id="sex" label="Sex" value={sex} onChange={setSex} options={SEX} placeholder="Select sex" />
         </>
+      )}
+
+      {/* FAMILY */}
+      {canonicalType === "FAMILY" && (
+        <>
+          <label>Family Group</label>
+          <p>Register family members together</p>
+        </>
+      )}
+
+      {/* Group Size */}
+      {canonicalType && (
+        <div>
+          <label>Group Size</label>
+          <input type="number" min="1" value={groupSize} onChange={(e) => setGroupSize(Number(e.target.value))} />
+        </div>
       )}
 
       <button type="submit" disabled={!canSubmit}>Submit</button>
 
-      {error && <div style={{ color: "red" }}>{error}</div>}
-      {done && <div style={{ color: "green" }}>✅ Registered successfully</div>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {done && <p style={{ color: "green" }}>✅ Registered!</p>}
     </form>
   );
 }

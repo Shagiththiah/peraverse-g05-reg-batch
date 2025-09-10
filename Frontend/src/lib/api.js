@@ -1,10 +1,26 @@
-import axios from 'axios';
-const http = axios.create({ baseURL: import.meta.env.VITE_API_BASE || '/api' });
-export const api = {
-  provinces: () => http.get('/provinces').then(r => r.data),
-  districts: (province) => http.get('/districts', { params: { province } }).then(r => r.data),
-  schools:   (province, district) => http.get('/schools', { params: { province, district } }).then(r => r.data),
-  universities: () => http.get('/universities').then(r => r.data),
-  departments:  (university) => http.get('/departments', { params: { university } }).then(r => r.data),
-  register:  (payload) => http.post('/register', payload).then(r => r.data),
+const BASE_URL = "http://127.0.0.1:4000/api";
+const ADMIN_URL = "http://127.0.0.1:4000/admin";
+
+async function request(url, options = {}) {
+  const res = await fetch(url, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+  if (!res.ok) throw new Error("API error");
+  return res.json();
+}
+
+const api = {
+  provinces: () => request(`${BASE_URL}/provinces`),
+  districts: (province) => request(`${BASE_URL}/districts?province=${province}`),
+  schools: (province, district) =>
+    request(`${BASE_URL}/schools?province=${province}&district=${district}`),
+  universities: () => request(`${BASE_URL}/universities`),
+  departments: (university) =>
+    request(`${BASE_URL}/departments?university=${university}`),
+  register: (data) =>
+    request(`${BASE_URL}/register`, { method: "POST", body: JSON.stringify(data) }),
+  getVisitors: () => request(`${ADMIN_URL}/visitors`),
 };
+
+export default api;

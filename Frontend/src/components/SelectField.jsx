@@ -1,15 +1,25 @@
-import React from 'react';
-export default function SelectField({ label, value, onChange, options, placeholder='Select...', disabled=false, id }) {
+import React from "react";
+
+export default function SelectField({ id, label, value, onChange, options, placeholder, disabled }) {
   return (
-    <label style={{ display: 'block', marginBottom: 12 }}>
-      <span style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>{label}</span>
+    <div style={{ marginBottom: 10 }}>
+      <label htmlFor={id} style={{ display: "block", marginBottom: 4 }}>
+        {label}
+      </label>
       <select
-        id={id} aria-label={label} value={value}
-        onChange={e => onChange(e.target.value)} disabled={disabled}
-        style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1px solid #ccc', outline:'none' }}>
-        <option value="" disabled>{placeholder}</option>
-        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        style={{ width: "100%", padding: 8, borderRadius: 6 }}
+      >
+        <option value="">{placeholder}</option>
+        {options.map((opt, i) => (
+          <option key={i} value={opt}>
+            {opt}
+          </option>
+        ))}
       </select>
-    </label>
+    </div>
   );
 }
