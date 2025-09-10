@@ -20,8 +20,8 @@ Thumbs.db
 *.swp
 *.swo
 
-# Environment files (keep .env.example for collaborators)
-.env
+# Environment files (shared database server)
+# .env - ALLOWED for shared database
 .env.local
 .env.production
 

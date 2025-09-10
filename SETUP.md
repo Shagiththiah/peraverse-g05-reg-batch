@@ -17,15 +17,9 @@
    npm install
    ```
 
-3. **Create environment file:**
-   Create `Backend/.env` with:
-   ```env
-   # Database Configuration
-   DATABASE_URL="postgresql://username:password@localhost:5432/register_db?schema=public"
-   
-   # Server Configuration
-   PORT=4000
-   ```
+3. **Environment file:**
+   The `Backend/.env` file is already included with shared database configuration.
+   If you need to modify the database connection, edit `Backend/.env`.
 
 4. **Setup database:**
    ```bash
