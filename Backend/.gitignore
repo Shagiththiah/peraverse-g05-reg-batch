@@ -1,5 +1,25 @@
+# Dependencies
 node_modules/
-.env
+
+# Logs
 *.log
+
+# Coverage reports
 coverage/
+
+# Prisma generated client (will be regenerated)
 .prisma/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db

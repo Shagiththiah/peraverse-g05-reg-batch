@@ -4,37 +4,37 @@ import SelectField from "./SelectField";
 import api from "../lib/api";
 import "../form.css";
 
-const TYPE_OPTIONS = [
+const BATCH_OPTIONS = [
   { value: "school", label: "School" },
   { value: "university", label: "University" },
+  { value: "family", label: "Family" },
   { value: "general", label: "General People" },
 ];
 
-export default function RegistrationForm() {
+export default function BatchRegistration() {
   const navigate = useNavigate();
   const [type, setType] = useState("");
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [schools, setSchools] = useState([]);
   const [universities, setUniversities] = useState([]);
-  const [departments, setDepartments] = useState([]);
 
-  // selected values
+  // Selected values
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedSchool, setSelectedSchool] = useState("");
   const [selectedUniversity, setSelectedUniversity] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState("");
   const [ageRange, setAgeRange] = useState("");
   const [sex, setSex] = useState("");
+  const [count, setCount] = useState("");
 
-  // Load provinces & universities
+  // Load provinces + universities
   useEffect(() => {
     api.provinces().then(setProvinces);
     api.universities().then(setUniversities);
   }, []);
 
-  // Load districts on province select
+  // Load districts on province
   useEffect(() => {
     if (selectedProvince) {
       api.districts(selectedProvince).then(setDistricts);
@@ -52,31 +52,12 @@ export default function RegistrationForm() {
     }
   }, [selectedProvince, selectedDistrict]);
 
-  // Load departments on university select
-  useEffect(() => {
-    if (selectedUniversity) {
-      api.departments(selectedUniversity).then(setDepartments);
-    } else {
-      setDepartments([]);
-    }
-  }, [selectedUniversity]);
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validation
-    if (!type) {
-      alert("Please select a registration type");
-      return;
-    }
-
-    let payload = { type };
+    let payload = { type, count: parseInt(count, 10) };
 
     if (type === "school") {
-      if (!selectedProvince || !selectedDistrict || !selectedSchool) {
-        alert("Please fill in all required fields for school registration");
-        return;
-      }
       payload = {
         ...payload,
         province: selectedProvince,
@@ -84,43 +65,32 @@ export default function RegistrationForm() {
         school: selectedSchool,
       };
     } else if (type === "university") {
-      if (!selectedUniversity || !selectedDepartment) {
-        alert("Please fill in all required fields for university registration");
-        return;
-      }
+      payload = { ...payload, university: selectedUniversity };
+    } else if (type === "family") {
       payload = {
         ...payload,
-        university: selectedUniversity,
-        department: selectedDepartment,
+        province: selectedProvince,
+        district: selectedDistrict,
       };
     } else if (type === "general") {
-      if (!ageRange || !sex) {
-        alert("Please fill in all required fields for general registration");
-        return;
-      }
       payload = { ...payload, ageRange, sex };
     }
 
-    try {
-      console.log("Submitting registration:", payload);
-      await api.register(payload);
-      alert("Registration successful!");
+    api.batchRegister(payload).then(() => {
+      alert("Batch registration successful!");
       navigate("/");
-    } catch (error) {
-      console.error("Registration error:", error);
-      alert("Registration failed: " + (error.message || "Unknown error"));
-    }
+    });
   };
 
   return (
     <div className="form-container">
-      <h2>Individual Registration</h2>
+      <h2>Batch Registration</h2>
       <button type="button" className="back-btn" onClick={() => navigate("/")}>Back</button>
 
       <form onSubmit={handleSubmit}>
         <SelectField
           label="Select Type"
-          options={TYPE_OPTIONS}
+          options={BATCH_OPTIONS}
           value={type}
           onChange={setType}
         />
@@ -151,19 +121,28 @@ export default function RegistrationForm() {
         )}
 
         {type === "university" && (
+          <SelectField
+            label="University"
+            options={universities.map((u) => ({ value: u, label: u }))}
+            value={selectedUniversity}
+            onChange={setSelectedUniversity}
+          />
+        )}
+
+        {type === "family" && (
           <>
             <SelectField
-              label="University"
-              options={universities.map((u) => ({ value: u, label: u }))}
-              value={selectedUniversity}
-              onChange={setSelectedUniversity}
+              label="Province"
+              options={provinces.map((p) => ({ value: p, label: p }))}
+              value={selectedProvince}
+              onChange={setSelectedProvince}
             />
             <SelectField
-              label="Department"
-              options={departments.map((d) => ({ value: d, label: d }))}
-              value={selectedDepartment}
-              onChange={setSelectedDepartment}
-              disabled={!selectedUniversity}
+              label="District"
+              options={districts.map((d) => ({ value: d, label: d }))}
+              value={selectedDistrict}
+              onChange={setSelectedDistrict}
+              disabled={!selectedProvince}
             />
           </>
         )}
@@ -194,8 +173,21 @@ export default function RegistrationForm() {
           </>
         )}
 
+        {type && (
+          <div className="form-group">
+            <label>Count</label>
+            <input
+              type="number"
+              value={count}
+              onChange={(e) => setCount(e.target.value)}
+              min="1"
+              required
+            />
+          </div>
+        )}
+
         <button type="submit" className="submit-btn">
-          Register
+          Register Batch
         </button>
       </form>
     </div>

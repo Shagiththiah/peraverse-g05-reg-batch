@@ -18,16 +18,16 @@ model District {
   name       String   @unique
   province   Province @relation(fields: [provinceId], references: [id])
   provinceId Int
-  schools    School[]
 
   @@unique([name, provinceId]) 
 }
 
+// Optimized school table with district-based partitioning
 model School {
   id        Int      @id @default(autoincrement())
   name      String
-  district  District @relation(fields: [districtId], references: [id])
-  districtId Int
+  district  String   @default("Unknown") // Store district name directly for easier querying
+  districtId Int     @default(1) // Reference to district ID for relationships
 }
 
 model University {
@@ -57,23 +57,25 @@ model Registration {
   sex         String?
   group_size  Int?      @default(1)
   group_meta  Json?
+  rfidTagId   Int?      @unique // Reference to assigned RFID tag (unique for one-to-one)
+  rfidTag     RfidTag?  @relation(fields: [rfidTagId], references: [id])
   createdAt   DateTime  @default(now())
 }
 
-model Visitor {
-  id          Int      @id @default(autoincrement())
-  type        String
-  province    String?
-  district    String?
-  schoolName  String?
-  university  String?
-  department  String?
-  ageRange    String?
-  sex         String?
+model RfidTag {
+  id          Int         @id @default(autoincrement())
+  tagNumber   String      @unique // Unique RFID tag number
+  status      RfidStatus  @default(AVAILABLE) // AVAILABLE, ASSIGNED, DEACTIVATED
+  assignedTo  Int?        // Registration ID if assigned
+  registration Registration? // Back-relation without fields/references
+  assignedAt  DateTime?   // When tag was assigned
+  deactivatedAt DateTime? // When tag was deactivated
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
 
-  // Batch registration fields
-  group_size  Int?      // e.g., number of students, family members
-  group_meta  Json?     // e.g., { leader: "Mr. Perera", relation: "Family" }
-
-  createdAt   DateTime @default(now())
+enum RfidStatus {
+  AVAILABLE
+  ASSIGNED
+  DEACTIVATED
 }
